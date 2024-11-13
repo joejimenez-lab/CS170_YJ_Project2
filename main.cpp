@@ -1,17 +1,28 @@
 #include <iostream>
 #include <cstdlib> // For rand()
 #include <ctime>   // For seeding random
+#include <vector>  // For vector
+#include <algorithm> // For find and remove
+#include <iomanip> // For std::fixed and std::setprecision
+#include <iterator> // For ostream_iterator
 
 using namespace std;
 
 // Function declarations
 // Stub evaluation function
 double evaluateFeatureSet(const vector<int>& featureSet) {
-    // Generate a random score for now
-    return rand() % 100 + 1; // Random score between 1 and 100
+    return (rand() % 10000) / 100.0; // Generates a random floating-point value between 0.00 and 99.99
 }
+
+bool isFeatureSelected(const vector<int>& selectedFeatures, int feature) {
+    // Returns true if the feature is already in the selectedFeatures list
+    return std::find(selectedFeatures.begin(), selectedFeatures.end(), feature) != selectedFeatures.end();
+}
+
 void forwardSelection(int totalFeatures) {
-    cout << "Starting Forward Selection...\n";
+    cout << "Using no features and \"random\" evaluation, I get an accuracy of " 
+         << fixed << setprecision(1) << evaluateFeatureSet({}) << "%" << endl;
+    cout << "Beginning search." << endl;
 
     vector<int> selectedFeatures; // Keep track of selected features
     double bestAccuracy = 0.0;    // Best accuracy so far
@@ -20,75 +31,81 @@ void forwardSelection(int totalFeatures) {
         int bestFeature = -1;   // Store the feature giving the best score
         double maxAccuracy = 0; // Store the best score in this iteration
 
-        cout << "Evaluating features...\n";
         for (int feature = 1; feature <= totalFeatures; ++feature) {
-            // Skip features already selected
-            if (find(selectedFeatures.begin(), selectedFeatures.end(), feature) != selectedFeatures.end()) {
-                continue;
-            }
+            // Check if the feature is already selected
+            if (!isFeatureSelected(selectedFeatures, feature)) {
+                // Simulate evaluation with a stub function
+                vector<int> tempSet = selectedFeatures;
+                tempSet.push_back(feature);
+                double accuracy = evaluateFeatureSet(tempSet);
 
-            // Simulate evaluation with a stub function
-            vector<int> tempSet = selectedFeatures;
-            tempSet.push_back(feature);
-            double accuracy = evaluateFeatureSet(tempSet);
+                cout << "Using feature(s) {";
+                copy(tempSet.begin(), tempSet.end(), ostream_iterator<int>(cout, ","));
+                cout << "\b} accuracy is " << fixed << setprecision(1) << accuracy << "%" << endl;
 
-            cout << "Using feature(s) { ";
-            for (int f : tempSet) cout << f << " ";
-            cout << "} accuracy is " << accuracy << "%\n";
-
-            if (accuracy > maxAccuracy) {
-                maxAccuracy = accuracy;
-                bestFeature = feature;
+                if (accuracy > maxAccuracy) {
+                    maxAccuracy = accuracy;
+                    bestFeature = feature;
+                }
             }
         }
 
         if (bestFeature != -1) {
             selectedFeatures.push_back(bestFeature);
+
+            if (maxAccuracy < bestAccuracy) {
+                cout << "(Warning, Accuracy has decreased!)" << endl;
+            }
+
             bestAccuracy = maxAccuracy;
-            cout << "Feature set { ";
-            for (int f : selectedFeatures) cout << f << " ";
-            cout << "} was best, accuracy is " << bestAccuracy << "%\n";
+            cout << "Feature set {";
+            copy(selectedFeatures.begin(), selectedFeatures.end(), ostream_iterator<int>(cout, ","));
+            cout << "\b} was best, accuracy is " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
         } else {
-            cout << "No further improvements possible.\n";
+            cout << "No further improvements possible." << endl;
             break;
         }
     }
 
-    cout << "Finished search!! The best feature subset is { ";
-    for (int f : selectedFeatures) cout << f << " ";
-    cout << "}, which has an accuracy of " << bestAccuracy << "%\n";
+    cout << "Finished search!! The best feature subset is {";
+    copy(selectedFeatures.begin(), selectedFeatures.end(), ostream_iterator<int>(cout, ","));
+    cout << "\b}, which has an accuracy of " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
 }
-void backwardElimination(int totalFeatures);
+
+//void backwardElimination;
 
 int main() {
     srand(static_cast<unsigned int>(time(0))); // Seed random number generator
 
-    cout << "Welcome to the Feature Selection Algorithm.\n";
+    cout << "Welcome to the Feature Selection Algorithm." << endl << endl;
     cout << "Please enter the total number of features: ";
     int totalFeatures;
     cin >> totalFeatures;
-
-    if (totalFeatures <= 0) {
-        cout << "Invalid number of features. Exiting.\n";
-        return 1;
+    cout << endl;
+    while (totalFeatures <= 0) {
+        cout << "Invalid number of features." << endl;
+        cout << "Please enter the total number of features: ";
+        cin >> totalFeatures;
+        cout << endl;
     }
 
-    cout << "Type the number of the algorithm you want to run.\n";
-    cout << "1. Forward Selection\n";
-    cout << "2. Backward Elimination\n";
-    cout << "3. Special Algorithm (Not Implemented)\n";
+    cout << "Type the number of the algorithm you want to run." << endl << endl;
+    cout << "1. Forward Selection" << endl;
+    cout << "2. Backward Elimination" << endl;
+    cout << "3. Special Algorithm (Not Implemented)" << endl;
 
     int choice;
     cin >> choice;
 
+    cout << endl << endl;
     if (choice == 1) {
         forwardSelection(totalFeatures);
     } else if (choice == 2) {
         backwardElimination(totalFeatures);
     } else if (choice == 3) {
-        cout << "Special Algorithm is not implemented yet.\n";
+        cout << "Special Algorithm is not implemented yet." << endl;
     } else {
-        cout << "Invalid choice. Exiting.\n";
+        cout << "Invalid choice. Exiting." << endl;
         return 1;
     }
 
