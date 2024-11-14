@@ -72,7 +72,59 @@ void forwardSelection(int totalFeatures) {
     cout << "\b}, which has an accuracy of " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
 }
 
-//void backwardElimination;
+void backwardElimination(int totalFeatures) {
+    cout << "Using all features and \"random\" evaluation, I get an accuracy of " 
+         << fixed << setprecision(1) << evaluateFeatureSet(vector<int>(totalFeatures)) << "%" << endl;
+    cout << "Beginning search." << endl;
+
+    vector<int> selectedFeatures;
+    for (int i = 1; i <= totalFeatures; ++i) {
+        selectedFeatures.push_back(i); // Start with all features
+    }
+
+    double bestAccuracy = evaluateFeatureSet(selectedFeatures); // Initial accuracy
+    while (selectedFeatures.size() > 1) {
+        int worstFeature = -1;  // Feature to remove
+        double maxAccuracy = 0; // Accuracy after removal
+
+        for (size_t i = 0; i < selectedFeatures.size(); ++i) {
+            int feature = selectedFeatures[i];
+            
+            // Create a temporary subset without the current feature
+            vector<int> tempSet = selectedFeatures;
+            tempSet.erase(tempSet.begin() + i);
+            double accuracy = evaluateFeatureSet(tempSet);
+
+            cout << "Using feature(s) {";
+            copy(tempSet.begin(), tempSet.end(), ostream_iterator<int>(cout, ","));
+            cout << "\b} accuracy is " << fixed << setprecision(1) << accuracy << "%" << endl;
+
+            if (accuracy > maxAccuracy) {
+                maxAccuracy = accuracy;
+                worstFeature = feature;
+            }
+        }
+
+        if (worstFeature != -1) {
+            selectedFeatures.erase(remove(selectedFeatures.begin(), selectedFeatures.end(), worstFeature), selectedFeatures.end());
+            if (maxAccuracy < bestAccuracy) {
+                cout << "(Warning, Accuracy has decreased!)" << endl;
+            }
+            bestAccuracy = maxAccuracy;
+
+            cout << "Feature set {";
+            copy(selectedFeatures.begin(), selectedFeatures.end(), ostream_iterator<int>(cout, ","));
+            cout << "\b} was best, accuracy is " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
+        } else {
+            cout << "No further improvements possible." << endl;
+            break;
+        }
+    }
+
+    cout << "Finished search!! The best feature subset is {";
+    copy(selectedFeatures.begin(), selectedFeatures.end(), ostream_iterator<int>(cout, ","));
+    cout << "\b}, which has an accuracy of " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
+}
 
 int main() {
     srand(static_cast<unsigned int>(time(0))); // Seed random number generator
