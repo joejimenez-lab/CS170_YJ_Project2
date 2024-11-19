@@ -129,7 +129,7 @@ void backwardElimination(int totalFeatures) {
 int main() {
     srand(static_cast<unsigned int>(time(0))); // Seed random number generator
 
-    cout << "Welcome to the Feature Selection Algorithm." << endl << endl;
+    cout << "Welcome to Joe's and Yahirs Feature Selection Algorithm." << endl << endl;
     cout << "Please enter the total number of features: ";
     int totalFeatures;
     cin >> totalFeatures;
