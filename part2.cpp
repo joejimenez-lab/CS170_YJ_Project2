@@ -52,7 +52,7 @@ void parseDataset(const string& filename, vector<Instance>& instances) {
     file.close();
 
     // Print the first 5 parsed instances for debugging and verification
-    cout << "First 5 parsed instances:" << endl;
+    /*cout << "First 5 parsed instances:" << endl;
     for (size_t i = 0; i < min(instances.size(), size_t(5)); ++i) {
         cout << "Label: " << instances[i].label << " Features: ";
         for (double feature : instances[i].features) {
@@ -60,6 +60,7 @@ void parseDataset(const string& filename, vector<Instance>& instances) {
         }
         cout << endl;
     }
+    */
 }
 
 // Normalizes the feature values for all instances to the range [0, 1].
@@ -90,6 +91,7 @@ void normalizeFeatures(vector<Instance>& instances) {
     }
 
     // Print the first 5 normalized instances for debugging
+    /*
     cout << "First 5 normalized instances:" << endl;
     for (size_t i = 0; i < min(instances.size(), size_t(5)); ++i) {
         cout << "Label: " << instances[i].label << " Features: ";
@@ -98,6 +100,7 @@ void normalizeFeatures(vector<Instance>& instances) {
         }
         cout << endl;
     }
+    */
 }
 
 // Filters the dataset to only include selected features based on their indices.
@@ -114,6 +117,7 @@ vector<Instance> filterFeatures(const vector<Instance>& data, const set<int>& se
     }
 
     // Print the first 5 filtered instances for debugging
+    /**
     cout << "First 5 filtered instances:" << endl;
     for (size_t i = 0; i < min(filteredData.size(), size_t(5)); ++i) {
         cout << "Label: " << filteredData[i].label << " Features: ";
@@ -122,6 +126,7 @@ vector<Instance> filterFeatures(const vector<Instance>& data, const set<int>& se
         }
         cout << endl;
     }
+    */
 
     return filteredData;
 }
