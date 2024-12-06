@@ -7,8 +7,12 @@
 #include <cmath>
 #include <set>
 #include <limits>
+#include <chrono> // For timing
 
 using namespace std;
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
 
 // Represents a single data instance with its features and label
 struct Instance {
@@ -198,13 +202,12 @@ double leaveOneOutValidation(vector<Instance>& data) {
 int main() {
     vector<Instance> instances;
     string datasetFilename;
+    int datasetChoice;
 
-    // Prompt the user to select which dataset to use
     cout << "Please Select Which Dataset to Use: (Input number)" << endl;
     cout << "1. Small Dataset" << endl;
     cout << "2. Large Dataset" << endl;
     cout << "Choice: ";
-    int datasetChoice;
     cin >> datasetChoice;
 
     // Determine the appropriate filename based on user choice
@@ -217,13 +220,20 @@ int main() {
         return 1;
     }
 
-    // Parse the dataset
+    // Timing for dataset parsing
+    auto startParse = high_resolution_clock::now();
     parseDataset(datasetFilename, instances);
+    auto endParse = high_resolution_clock::now();
+    cout << "Step 1: Dataset parsing completed in " 
+         << duration_cast<milliseconds>(endParse - startParse).count() << " ms" << endl;
 
-    // Normalize the dataset features
+    // Timing for normalization
+    auto startNormalize = high_resolution_clock::now();
     normalizeFeatures(instances);
+    auto endNormalize = high_resolution_clock::now();
+    cout << "Step 2: Feature normalization completed in " 
+         << duration_cast<milliseconds>(endNormalize - startNormalize).count() << " ms" << endl;
 
-    // Allow the user to select the feature set
     cout << "Parse entire dataset or only certain features?" << endl;
     cout << "1. Entire dataset" << endl;
     if (datasetChoice == 1) {
@@ -235,7 +245,6 @@ int main() {
     int featureChoice;
     cin >> featureChoice;
 
-    // Filter the dataset to include only the selected features if applicable
     set<int> selectedFeatures;
     if (featureChoice == 2) {
         if (datasetChoice == 1) {
@@ -243,11 +252,21 @@ int main() {
         } else {
             selectedFeatures = {1, 15, 27};
         }
+        auto startFilter = high_resolution_clock::now();
         instances = filterFeatures(instances, selectedFeatures);
+        auto endFilter = high_resolution_clock::now();
+        cout << "Step 3: Feature filtering completed in " 
+             << duration_cast<milliseconds>(endFilter - startFilter).count() << " ms" << endl;
     }
 
-    // Perform Leave-One-Out Validation and output the accuracy
+    // Timing for leave-one-out validation
+    auto startValidation = high_resolution_clock::now();
     double accuracy = leaveOneOutValidation(instances);
+    auto endValidation = high_resolution_clock::now();
+    cout << "Step 4: Leave-One-Out Validation completed in " 
+         << duration_cast<milliseconds>(endValidation - startValidation).count() << " ms" << endl;
+
+    // Output final accuracy
     cout << "Accuracy: " << fixed << setprecision(2) << accuracy << "%" << endl;
 
     return 0;
