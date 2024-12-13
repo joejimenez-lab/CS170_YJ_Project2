@@ -1,3 +1,23 @@
+/*
+
+- Group: Joe Jimenez - jjime206 and Yahir Amaral – yamar003 
+- Small Dataset Results:  
+- Forward: Feature Subset: {5, 3, 7, 1, 6, 2, 4, 9, 10, 8}, Acc: 68.0%  
+- Backward: Feature Subset: {5}, Acc: 75.0%  
+- Custom Algorithm: Feature subset: {5,3,7,1,6,2,4,9,10,8}, Acc: 68.0% 
+
+- Large Dataset Results:  
+- Forward: Feature Subset: {27,1,15,19,37,40,28,24,13,33,12,6,17,29,34,16,8,2,32,30,3,21,4,39,22,25,10,23,26,20,35,9,18,5,36,7,11,31,14,38}, Acc: 69.3%  
+- Backward: Feature Subset: {27}, Acc: 84.7% 
+- Custom Algorithm: Feature subset: {27,1,15,19,37,40,28,24,13,33,12,6,17,29,34,16,8,2,32,30,3,21,4,39,22,25,10,23,26,20,35,9,18,5,36,7,11,31,14,38}, Acc: 69.3% 
+
+- Titanic Dataset Results:  
+- Forward: Feature Subset: {2, 5, 4, 1, 3, 6}, Acc: 73.9%  
+- Backward: Feature Subset: {2}, Acc: 78% 
+- Custom Algorithm: Feature subset: {2,5,4,1,3,6}, Acc: 73.9% 
+
+*/
+
 #include <iostream>
 #include <cstdlib> // For rand()
 #include <ctime>   // For seeding random
@@ -280,6 +300,96 @@ void backwardElimination(vector<Instance> dataset, int totalFeatures) {
     cout << ", which has an accuracy of " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
 }
 
+void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
+    cout << "Starting Bidirectional Search..." << endl;
+
+    vector<int> forwardSelectedFeatures;
+    vector<int> backwardSelectedFeatures;
+    for (int i = 1; i <= totalFeatures; ++i) {
+        backwardSelectedFeatures.push_back(i);
+    }
+
+    double bestAccuracy = leaveOneOutValidation(data, {});
+    vector<int> bestFeatureSet;
+
+    while (!backwardSelectedFeatures.empty() || forwardSelectedFeatures.size() < totalFeatures) {
+        int bestFeatureToAdd = -1, bestFeatureToRemove = -1;
+        double bestForwardAccuracy = 0.0, bestBackwardAccuracy = 0.0;
+
+        // Forward selection step
+        for (int feature = 1; feature <= totalFeatures; ++feature) {
+            if (find(forwardSelectedFeatures.begin(), forwardSelectedFeatures.end(), feature) == forwardSelectedFeatures.end()) {
+                vector<int> tempFeatures = forwardSelectedFeatures;
+                tempFeatures.push_back(feature);
+
+                double accuracy = leaveOneOutValidation(data, tempFeatures);
+                if (accuracy > bestForwardAccuracy) {
+                    bestForwardAccuracy = accuracy;
+                    bestFeatureToAdd = feature;
+                }
+            }
+        }
+
+        // Backward elimination step
+        for (size_t i = 0; i < backwardSelectedFeatures.size(); ++i) {
+            vector<int> tempFeatures = backwardSelectedFeatures;
+            tempFeatures.erase(tempFeatures.begin() + i);
+
+            double accuracy = leaveOneOutValidation(data, tempFeatures);
+            if (accuracy > bestBackwardAccuracy) {
+                bestBackwardAccuracy = accuracy;
+                bestFeatureToRemove = backwardSelectedFeatures[i];
+            }
+        }
+
+        // Decide the better action (add or remove)
+        if (bestForwardAccuracy > bestBackwardAccuracy) {
+            forwardSelectedFeatures.push_back(bestFeatureToAdd);
+            backwardSelectedFeatures.erase(remove(backwardSelectedFeatures.begin(), backwardSelectedFeatures.end(), bestFeatureToAdd), backwardSelectedFeatures.end());
+            bestAccuracy = bestForwardAccuracy;
+            bestFeatureSet = forwardSelectedFeatures;
+            cout << "Added feature " << bestFeatureToAdd << ", accuracy: " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
+        } else if (bestBackwardAccuracy >= bestForwardAccuracy) {
+            backwardSelectedFeatures.erase(remove(backwardSelectedFeatures.begin(), backwardSelectedFeatures.end(), bestFeatureToRemove), backwardSelectedFeatures.end());
+            forwardSelectedFeatures.erase(remove(forwardSelectedFeatures.begin(), forwardSelectedFeatures.end(), bestFeatureToRemove), forwardSelectedFeatures.end());
+            bestAccuracy = bestBackwardAccuracy;
+            bestFeatureSet = backwardSelectedFeatures;
+            cout << "Removed feature " << bestFeatureToRemove << ", accuracy: " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
+        } else {
+            break;
+        }
+    }
+
+    cout << "Finished Bidirectional Search! Best feature subset: ";
+    printFeatureSet(bestFeatureSet);
+    cout << " with accuracy: " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
+}
+void exportSelectedFeatures(const vector<Instance>& instances, const vector<int>& selectedFeatures, const string& filename) {
+    ofstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open file for writing." << endl;
+        return;
+    }
+
+    // Write CSV header
+    for (size_t i = 0; i < selectedFeatures.size(); ++i) {
+        file << "Feature" << selectedFeatures[i];
+        if (i < selectedFeatures.size() - 1) file << ",";
+    }
+    file << ",Label" << endl;
+
+    // Write feature values and class labels
+    for (const auto& instance : instances) {
+        for (size_t i = 0; i < selectedFeatures.size(); ++i) {
+            file << instance.features[selectedFeatures[i] - 1]; // Convert 1-based index to 0-based
+            if (i < selectedFeatures.size() - 1) file << ",";
+        }
+        file << "," << instance.label << endl; // Add label
+    }
+
+    file.close();
+    cout << "Exported selected features to " << filename << endl;
+}
 
 
 int main() {
@@ -288,7 +398,7 @@ int main() {
     vector<Instance> instances;
     string datasetFilename;
 
-    cout << "Welcome to Joe's Feature Selection Algorithm." << endl;
+    cout << "Welcome to Joe's and Yahir's Feature Selection Algorithm." << endl;
     cout << "Type in the name of the file to test: ";
     cin >> datasetFilename;
 
@@ -300,7 +410,7 @@ int main() {
     cout << "Type the number of the algorithm you want to run." << endl << endl;
     cout << "1. Forward Selection" << endl;
     cout << "2. Backward Elimination" << endl;
-    cout << "3. Special Algorithm (Not Implemented)" << endl;
+    cout << "3. Custom Bidirectional Algorithm" << endl;
 
     int choice;
     cin >> choice;
@@ -312,11 +422,13 @@ int main() {
     } else if (choice == 2) {
         backwardElimination(instances, totalFeatures);
     } else if (choice == 3) {
-        cout << "Special Algorithm is not implemented yet." << endl;
+        bidirectionalSearch(instances, totalFeatures);
     } else {
         cout << "Invalid choice. Exiting." << endl;
         return 1;
     }
+        //exportSelectedFeatures(instances, {2, 1}, "good_features.csv"); // Features that separate well
+    //exportSelectedFeatures(instances, {3, 6}, "bad_features.csv"); // Features that don’t separate well
 
     return 0;
 }
