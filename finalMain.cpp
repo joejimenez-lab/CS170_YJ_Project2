@@ -24,15 +24,11 @@
 #include <vector>  // For vector
 #include <algorithm> // For find and remove
 #include <iomanip> // For std::fixed and std::setprecision
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <iomanip>
-#include <cmath>
-#include <set>
-#include <limits>
+#include <fstream> // For file operations
+#include <sstream> // For string stream processing
+#include <cmath>   // For mathematical operations
+#include <set>     // For set data structure
+#include <limits>  // For numeric limits
 
 using namespace std;
 
@@ -48,24 +44,24 @@ bool isFeatureSelected(const vector<int>& selectedFeatures, int feature) {
 
 // Struct to represent an instance with features and label
 struct Instance {
-    vector<double> features;
-    int label;
+    vector<double> features; // Stores feature values
+    int label;               // Class label
 };
 
 // Function to parse the dataset from a file
 void parseDataset(const string& filename, vector<Instance>& instances) {
-    ifstream file(filename);
-    if (!file.is_open()) {
+    ifstream file(filename); // Open the file
+    if (!file.is_open()) { // Check if file opens successfully
         cerr << "Error: Unable to open file " << filename << endl;
-        exit(1);
+        exit(1); // Exit if file cannot be opened
     }
 
     string line;
-    while (getline(file, line)) {
-        stringstream ss(line);
+    while (getline(file, line)) { // Read each line from file
+        stringstream ss(line); // Process the line using stringstream
         double value;
-        vector<double> features;
-        int label;
+        vector<double> features; // To store feature values
+        int label; // To store class label
 
         ss >> label; // Extract label (first column)
         while (ss >> value) { // Extract feature values
@@ -76,17 +72,17 @@ void parseDataset(const string& filename, vector<Instance>& instances) {
             features.erase(features.begin()); // Remove extraneous initial values
         }
 
-        instances.push_back({features, label});
+        instances.push_back({features, label}); // Add instance to dataset
     }
 
-    file.close();
+    file.close(); // Close the file
 }
 
 // Function to normalize features in the dataset
 void normalizeFeatures(vector<Instance>& instances) {
-    size_t numFeatures = instances[0].features.size();
-    vector<double> minValues(numFeatures, numeric_limits<double>::max());
-    vector<double> maxValues(numFeatures, numeric_limits<double>::lowest());
+    size_t numFeatures = instances[0].features.size(); // Get number of features
+    vector<double> minValues(numFeatures, numeric_limits<double>::max()); // Initialize minimum values
+    vector<double> maxValues(numFeatures, numeric_limits<double>::lowest()); // Initialize maximum values
 
     // Find min and max for each feature
     for (const auto& instance : instances) {
@@ -102,7 +98,7 @@ void normalizeFeatures(vector<Instance>& instances) {
             if (maxValues[i] != minValues[i]) {
                 instance.features[i] = (instance.features[i] - minValues[i]) / (maxValues[i] - minValues[i]);
             } else {
-                instance.features[i] = 0.0;
+                instance.features[i] = 0.0; // Set to 0 if min and max are the same
             }
         }
     }
@@ -112,12 +108,14 @@ void normalizeFeatures(vector<Instance>& instances) {
 double calculateDistance(const vector<double>& a, const vector<double>& b) {
     double distance = 0.0;
     for (size_t i = 0; i < a.size(); ++i) {
-        distance += pow(a[i] - b[i], 2);
+        distance += pow(a[i] - b[i], 2); // Sum of squared differences
     }
-    return sqrt(distance);
+    return sqrt(distance); // Return square root of sum
 }
+
+// Filters dataset to retain only selected features
 vector<Instance> filterFeatures(const vector<Instance>& data, const set<int>& selectedFeatures) {
-    vector<Instance> filteredData;
+    vector<Instance> filteredData; // Filtered dataset
 
     for (const auto& instance : data) {
         vector<double> filteredFeatures;
@@ -137,7 +135,7 @@ double leaveOneOutValidation(vector<Instance>& data, const vector<int>& featureS
     for (size_t i = 0; i < data.size(); ++i) {
         vector<Instance> trainingSet = data;
         Instance testInstance = trainingSet[i];
-        trainingSet.erase(trainingSet.begin() + i);
+        trainingSet.erase(trainingSet.begin() + i); // Leave out one instance
 
         // Filter features for training and test sets
         for (auto& instance : trainingSet) {
@@ -165,12 +163,12 @@ double leaveOneOutValidation(vector<Instance>& data, const vector<int>& featureS
             }
         }
 
-        if (predictedLabel == testInstance.label) {
+        if (predictedLabel == testInstance.label) { // Check if prediction is correct
             ++correctPredictions;
         }
     }
 
-    return static_cast<double>(correctPredictions) / data.size() * 100.0;
+    return static_cast<double>(correctPredictions) / data.size() * 100.0; // Return accuracy
 }
 
 // Helper function to print feature sets
@@ -190,13 +188,14 @@ void forwardSelection(vector<Instance>& data, int totalFeatures) {
 
     cout << "Beginning search." << endl;
 
-    vector<int> selectedFeatures;
+    vector<int> selectedFeatures; // Track selected features
     double bestOverallAccuracy = 0.0;
 
     for (int i = 1; i <= totalFeatures; ++i) {
         int bestFeature = -1;
         double bestAccuracy = 0.0;
 
+        // Iterate through unselected features
         for (int feature = 1; feature <= totalFeatures; ++feature) {
             if (find(selectedFeatures.begin(), selectedFeatures.end(), feature) == selectedFeatures.end()) {
                 vector<int> tempFeatures = selectedFeatures;
@@ -209,7 +208,7 @@ void forwardSelection(vector<Instance>& data, int totalFeatures) {
 
                 if (accuracy > bestAccuracy) {
                     bestAccuracy = accuracy;
-                    bestFeature = feature;
+                    bestFeature = feature; // Update best feature
                 }
             }
         }
@@ -225,7 +224,7 @@ void forwardSelection(vector<Instance>& data, int totalFeatures) {
             printFeatureSet(selectedFeatures);
             cout << " was best, accuracy is " << fixed << setprecision(1) << bestOverallAccuracy << "%" << endl;
         } else {
-            break;
+            break; // Stop if no features improve accuracy
         }
     }
 
@@ -300,16 +299,17 @@ void backwardElimination(vector<Instance> dataset, int totalFeatures) {
     cout << ", which has an accuracy of " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
 }
 
+// Bidirectional search combines forward selection and backward elimination
 void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
     cout << "Starting Bidirectional Search..." << endl;
 
-    vector<int> forwardSelectedFeatures;
+    vector<int> forwardSelectedFeatures; // Features selected during forward selection
     vector<int> backwardSelectedFeatures;
     for (int i = 1; i <= totalFeatures; ++i) {
-        backwardSelectedFeatures.push_back(i);
+        backwardSelectedFeatures.push_back(i); // Initialize with all features
     }
 
-    double bestAccuracy = leaveOneOutValidation(data, {});
+    double bestAccuracy = leaveOneOutValidation(data, {}); // Initial accuracy with no features
     vector<int> bestFeatureSet;
 
     while (!backwardSelectedFeatures.empty() || forwardSelectedFeatures.size() < totalFeatures) {
@@ -325,7 +325,7 @@ void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
                 double accuracy = leaveOneOutValidation(data, tempFeatures);
                 if (accuracy > bestForwardAccuracy) {
                     bestForwardAccuracy = accuracy;
-                    bestFeatureToAdd = feature;
+                    bestFeatureToAdd = feature; // Feature to add
                 }
             }
         }
@@ -338,7 +338,7 @@ void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
             double accuracy = leaveOneOutValidation(data, tempFeatures);
             if (accuracy > bestBackwardAccuracy) {
                 bestBackwardAccuracy = accuracy;
-                bestFeatureToRemove = backwardSelectedFeatures[i];
+                bestFeatureToRemove = backwardSelectedFeatures[i]; // Feature to remove
             }
         }
 
@@ -356,7 +356,7 @@ void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
             bestFeatureSet = backwardSelectedFeatures;
             cout << "Removed feature " << bestFeatureToRemove << ", accuracy: " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
         } else {
-            break;
+            break; // Exit if neither action improves accuracy
         }
     }
 
@@ -364,6 +364,8 @@ void bidirectionalSearch(vector<Instance>& data, int totalFeatures) {
     printFeatureSet(bestFeatureSet);
     cout << " with accuracy: " << fixed << setprecision(1) << bestAccuracy << "%" << endl;
 }
+
+// Exports selected features to a CSV file
 void exportSelectedFeatures(const vector<Instance>& instances, const vector<int>& selectedFeatures, const string& filename) {
     ofstream file(filename);
     if (!file.is_open()) {
@@ -391,21 +393,21 @@ void exportSelectedFeatures(const vector<Instance>& instances, const vector<int>
     cout << "Exported selected features to " << filename << endl;
 }
 
-
+// Main function to drive the feature selection process
 int main() {
     srand(static_cast<unsigned int>(time(0))); // Seed random number generator for consistent results
 
-    vector<Instance> instances;
+    vector<Instance> instances; // Dataset instances
     string datasetFilename;
 
     cout << "Welcome to Joe's and Yahir's Feature Selection Algorithm." << endl;
     cout << "Type in the name of the file to test: ";
     cin >> datasetFilename;
 
-    parseDataset(datasetFilename, instances);
-    normalizeFeatures(instances);
+    parseDataset(datasetFilename, instances); // Parse dataset from file
+    normalizeFeatures(instances); // Normalize feature values
 
-    int totalFeatures = instances[0].features.size();
+    int totalFeatures = instances[0].features.size(); // Number of features in the dataset
 
     cout << "Type the number of the algorithm you want to run." << endl << endl;
     cout << "1. Forward Selection" << endl;
@@ -417,6 +419,7 @@ int main() {
 
     cout << endl << endl;
 
+    // Run the selected algorithm
     if (choice == 1) {
         forwardSelection(instances, totalFeatures);
     } else if (choice == 2) {
@@ -427,8 +430,7 @@ int main() {
         cout << "Invalid choice. Exiting." << endl;
         return 1;
     }
-        //exportSelectedFeatures(instances, {2, 1}, "good_features.csv"); // Features that separate well
+    //exportSelectedFeatures(instances, {2, 1}, "good_features.csv"); // Features that separate well
     //exportSelectedFeatures(instances, {3, 6}, "bad_features.csv"); // Features that don’t separate well
-
     return 0;
 }
